@@ -1,0 +1,27 @@
+# Запуск: docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: warehouse
+      POSTGRES_PASSWORD: warehouse
+      POSTGRES_DB: warehouse
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse -d warehouse"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://warehouse:warehouse@db:5432/warehouse
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
