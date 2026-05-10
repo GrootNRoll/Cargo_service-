@@ -19,7 +19,7 @@ jobs:
       run:
         working-directory: backend
     env:
-      DATABASE_URL: sqlite:///:memory:
+      DATABASE_URL: "sqlite:///:memory:"
       SEED_DEMO_DATA: "false"
       CORS_ORIGINS: "http://testserver"
 
