@@ -12,8 +12,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
-    name: Backend (pytest)
+  init:
+    name: "1 — Init"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify repository layout
+        run: |
+          test -f backend/requirements.txt
+          test -f backend/requirements-dev.txt
+          test -f frontend/package.json
+
+      - name: Pipeline context
+        run: |
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+
+  test:
+    name: "2 — Test"
+    needs: init
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,8 +60,9 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
-  frontend:
-    name: Frontend (build)
+  build:
+    name: "3 — Build"
+    needs: test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -63,3 +82,30 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+  deploy:
+    name: "4 — Deploy"
+    needs: build
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+
+    steps:
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+
+      - name: Deploy (stub)
+        run: |
+          echo "Заглушка: подключите сюда реальный деплой (registry, SSH, PaaS, kubectl и т.д.)."
+          ls -la dist
