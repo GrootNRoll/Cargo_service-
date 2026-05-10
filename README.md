@@ -143,6 +143,10 @@ python -m pytest
 python -m pytest -q
 ```
 
+### CI (GitHub Actions)
+
+При пуше в ветки `main` или `master` и в pull request запускается [`.github/workflows/ci.yml`](.github/workflows/ci.yml): **pytest** в `backend/` и **`npm run build`** в `frontend/`.
+
 ---
 
 ## Структура каталогов (кратко)
