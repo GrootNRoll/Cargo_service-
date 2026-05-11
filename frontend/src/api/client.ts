@@ -100,12 +100,22 @@ async function request<T>(path: string, opts: FetchOpts = {}): Promise<T> {
     redirectToLogin();
   }
   if (!res.ok) throw new Error(await parseError(res));
+  if (res.status === 204) return undefined as T;
   if (method === "DELETE") return undefined as T;
   return res.json() as Promise<T>;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
   return request<T>(path, { auth: true });
+}
+
+export async function apiPostEmpty(path: string): Promise<void> {
+  await request<void>(path, { method: "POST", auth: true });
+}
+
+/** POST без тела, ответ JSON. */
+export async function apiPostForJson<T>(path: string): Promise<T> {
+  return request<T>(path, { method: "POST", auth: true });
 }
 
 export async function apiPostJson<T>(path: string, body: unknown, auth = true): Promise<T> {

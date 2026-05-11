@@ -19,3 +19,4 @@ class WarehouseRead(WarehouseBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    member_count: int = 0

@@ -7,6 +7,11 @@ export interface UserPublic {
   role: UserRole;
 }
 
+/** Ответ GET /admin/users — включает активность. */
+export interface UserAdminRow extends UserPublic {
+  is_active: boolean;
+}
+
 export interface LoginResponse {
   access_token: string;
   token_type: string;
@@ -31,6 +36,18 @@ export interface Warehouse {
   id: number;
   name: string;
   address: string | null;
+  member_count: number;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  created_at: string;
+  actor_username: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: number | null;
+  warehouse_id: number | null;
+  detail: Record<string, unknown> | null;
 }
 
 export interface StockItem {

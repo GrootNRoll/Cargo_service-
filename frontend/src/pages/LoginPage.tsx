@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { SiteFooter } from "../components/SiteFooter";
 
 export function LoginPage() {
   const { user, ready, login } = useAuth();
@@ -31,39 +32,42 @@ export function LoginPage() {
 
   return (
     <div className="login-wrap">
-      <div className="login-card card">
-        <h1 className="login-title">Вход</h1>
-        <p className="page-sub login-hint">
-          Учётная запись выдаётся администратором.
-        </p>
-        {error && <div className="alert">{error}</div>}
-        <form onSubmit={onSubmit} className="stack">
-          <div className="field">
-            <label htmlFor="login-user">Имя пользователя</label>
-            <input
-              id="login-user"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="login-pass">Пароль</label>
-            <input
-              id="login-pass"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="btn btn-block" disabled={busy}>
-            {busy ? "Вход…" : "Войти"}
-          </button>
-        </form>
+      <div className="login-wrap-main">
+        <div className="login-card card">
+          <h1 className="login-title">Вход</h1>
+          <p className="page-sub login-hint">
+            Учётная запись выдаётся администратором.
+          </p>
+          {error && <div className="alert">{error}</div>}
+          <form onSubmit={onSubmit} className="stack">
+            <div className="field">
+              <label htmlFor="login-user">Имя пользователя</label>
+              <input
+                id="login-user"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="login-pass">Пароль</label>
+              <input
+                id="login-pass"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-block" disabled={busy}>
+              {busy ? "Вход…" : "Войти"}
+            </button>
+          </form>
+        </div>
       </div>
+      <SiteFooter variant="login" />
     </div>
   );
 }

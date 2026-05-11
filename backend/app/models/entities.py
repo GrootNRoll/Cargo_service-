@@ -4,7 +4,7 @@ import enum
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Enum, ForeignKey, Numeric, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, JSON, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -43,6 +43,10 @@ class Warehouse(Base):
 
     stock_items: Mapped[list[StockItem]] = relationship(back_populates="warehouse")
     orders: Mapped[list[Order]] = relationship(back_populates="warehouse")
+    members: Mapped[list["WarehouseMember"]] = relationship(
+        back_populates="warehouse",
+        cascade="all, delete-orphan",
+    )
 
 
 class StockItem(Base):
@@ -100,3 +104,48 @@ class User(Base):
         default=UserRole.worker,
     )
     is_active: Mapped[bool] = mapped_column(default=True)
+
+    warehouse_memberships: Mapped[list["WarehouseMember"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class WarehouseMember(Base):
+    """Участник склада (назначение сотрудника на площадку)."""
+
+    __tablename__ = "warehouse_members"
+    __table_args__ = (UniqueConstraint("warehouse_id", "user_id", name="uq_wh_user"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+
+    warehouse: Mapped[Warehouse] = relationship(back_populates="members")
+    user: Mapped[User] = relationship(back_populates="warehouse_memberships")
+
+
+class AuditLog(Base):
+    """Журнал действий для администратора."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
+    actor_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    action: Mapped[str] = mapped_column(index=True)
+    entity_type: Mapped[str] = mapped_column(index=True)
+    entity_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    warehouse_id: Mapped[int | None] = mapped_column(
+        ForeignKey("warehouses.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    detail: Mapped[dict | None] = mapped_column(JSON, default=None)
+
+    actor: Mapped[User | None] = relationship()
+    warehouse: Mapped[Warehouse | None] = relationship()

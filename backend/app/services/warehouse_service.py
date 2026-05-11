@@ -1,17 +1,48 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.entities import Warehouse
-from app.schemas.warehouse import WarehouseCreate, WarehouseUpdate
+from app.models.entities import Warehouse, WarehouseMember
+from app.schemas.warehouse import WarehouseCreate, WarehouseRead, WarehouseUpdate
 
 
-def list_warehouses(db: Session) -> list[Warehouse]:
-    return list(db.scalars(select(Warehouse).order_by(Warehouse.id)).all())
+def list_warehouses(db: Session) -> list[WarehouseRead]:
+    rows = db.execute(
+        select(Warehouse, func.count(WarehouseMember.id))
+        .outerjoin(WarehouseMember, WarehouseMember.warehouse_id == Warehouse.id)
+        .group_by(Warehouse.id)
+        .order_by(Warehouse.id)
+    ).all()
+    return [
+        WarehouseRead(
+            id=w.id,
+            name=w.name,
+            address=w.address,
+            member_count=int(cnt),
+        )
+        for w, cnt in rows
+    ]
 
 
 def get_warehouse(db: Session, warehouse_id: int) -> Warehouse | None:
     return db.get(Warehouse, warehouse_id)
+
+
+def read_warehouse(db: Session, warehouse_id: int) -> WarehouseRead | None:
+    w = get_warehouse(db, warehouse_id)
+    if w is None:
+        return None
+    cnt = db.scalar(
+        select(func.count())
+        .select_from(WarehouseMember)
+        .where(WarehouseMember.warehouse_id == warehouse_id)
+    )
+    return WarehouseRead(
+        id=w.id,
+        name=w.name,
+        address=w.address,
+        member_count=int(cnt or 0),
+    )
 
 
 def create_warehouse(db: Session, data: WarehouseCreate) -> Warehouse:

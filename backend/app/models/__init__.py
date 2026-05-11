@@ -1,4 +1,5 @@
 from app.models.entities import (
+    AuditLog,
     Order,
     OrderLine,
     OrderStatus,
@@ -7,9 +8,11 @@ from app.models.entities import (
     User,
     UserRole,
     Warehouse,
+    WarehouseMember,
 )
 
 __all__ = [
+    "AuditLog",
     "Order",
     "OrderLine",
     "OrderStatus",
@@ -18,4 +21,5 @@ __all__ = [
     "User",
     "UserRole",
     "Warehouse",
+    "WarehouseMember",
 ]

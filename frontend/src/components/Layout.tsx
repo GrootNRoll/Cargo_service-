@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth, useIsAdmin } from "../auth/AuthContext";
+import { SiteFooter } from "./SiteFooter";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? "active" : undefined;
@@ -36,6 +37,16 @@ export function Layout() {
           <NavLink to="/warehouses" className={linkClass}>
             Склады
           </NavLink>
+          {isAdmin && (
+            <NavLink to="/users" className={linkClass}>
+              Пользователи
+            </NavLink>
+          )}
+          {isAdmin && (
+            <NavLink to="/audit" className={linkClass}>
+              Журнал
+            </NavLink>
+          )}
         </nav>
         <div className="sidebar-footer small">
           {isAdmin ? "Все разделы доступны" : "Редактирование складов — только у администратора"}
@@ -54,6 +65,7 @@ export function Layout() {
         <main className="main-content">
           <Outlet />
         </main>
+        <SiteFooter />
       </div>
     </div>
   );

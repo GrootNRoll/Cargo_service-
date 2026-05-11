@@ -28,7 +28,9 @@ def test_warehouses_crud(client):
     wid = r.json()["id"]
 
     r = client.get("/api/warehouses")
-    assert len(r.json()) == 1
+    rows = [x for x in r.json() if x["id"] == wid]
+    assert len(rows) == 1
+    assert rows[0]["member_count"] == 0
 
     r = client.patch(f"/api/warehouses/{wid}", json={"address": None})
     assert r.status_code == 200

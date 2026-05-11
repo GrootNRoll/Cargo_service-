@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useIsAdmin } from "../auth/AuthContext";
 import { apiDelete, apiGet, apiPatchJson, apiPostJson } from "../api/client";
 import type { Warehouse } from "../types";
@@ -140,19 +141,20 @@ export function WarehousesPage() {
               <th>ID</th>
               <th>Название</th>
               <th>Адрес</th>
+              <th>Участники</th>
               {isAdmin && <th />}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={isAdmin ? 4 : 3} className="small">
+                <td colSpan={isAdmin ? 5 : 4} className="small">
                   Загрузка…
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 4 : 3} className="small">
+                <td colSpan={isAdmin ? 5 : 4} className="small">
                   Нет записей
                 </td>
               </tr>
@@ -162,9 +164,13 @@ export function WarehousesPage() {
                   <td>{w.id}</td>
                   <td>{w.name}</td>
                   <td>{w.address ?? "—"}</td>
+                  <td className="small">{w.member_count}</td>
                   {isAdmin && (
                     <td>
                       <div className="row-actions">
+                        <Link to={`/warehouses/${w.id}/members`} className="btn ghost">
+                          Участники
+                        </Link>
                         <button type="button" className="btn ghost" onClick={() => setEditing(w)}>
                           Изменить
                         </button>
