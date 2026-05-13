@@ -15,7 +15,90 @@
 
 ---
 
-## 2. Диаграмма вариантов использования
+## 2. Архитектура системы
+
+Ниже — **логическая** архитектура (не привязана к конкретному хостингу): один процесс backend, один SPA-фронт, одна реляционная БД.
+
+### 2.1. Контекст: клиент, API, хранилище
+
+```mermaid
+flowchart TB
+  U([Пользователь])
+
+  subgraph FE["Клиентское приложение (CSR)"]
+    SPA["React + TypeScript + Vite"]
+    CTX["AuthContext / страницы / Layout"]
+    CLI["api/client.ts — fetch + JWT"]
+    SPA --> CTX --> CLI
+  end
+
+  subgraph BE["Сервер приложения (Python)"]
+    FW["FastAPI — HTTP, OpenAPI, CORS"]
+    subgraph INT["Обработка запросов"]
+      RT["Маршруты /api — routers"]
+      DP["deps — текущий пользователь, сессия БД"]
+      SV["services — бизнес-логика"]
+      SC["Pydantic schemas"]
+      ORM["SQLAlchemy ORM — models"]
+    end
+    FW --> RT
+    RT --> DP
+    RT --> SV
+    RT --> SC
+    SV --> ORM
+  end
+
+  DB[("Реляционная БД<br/>SQLite или PostgreSQL")]
+
+  U --> SPA
+  CLI -->|"REST / JSON<br/>Authorization: Bearer"| FW
+  ORM --> DB
+```
+
+**Пояснение:** браузер загружает SPA; все операции с данными идут по **REST** на префикс `/api` (в dev Vite может проксировать на порт uvicorn). **JWT** передаётся в заголовке; роль из токена ограничивает доступ к административным маршрутам. Схема таблиц создаётся при старте приложения (`metadata.create_all`).
+
+### 2.2. Декомпозиция backend по пакетам
+
+```mermaid
+flowchart LR
+  subgraph routes["app.api.routes"]
+    R1["auth, summary"]
+    R2["products, stock, orders"]
+    R3["warehouses"]
+    R4["admin — users, audit"]
+  end
+
+  subgraph core["app.core — security, JWT"]
+  end
+
+  subgraph svc["app.services"]
+    S1["user, product, warehouse, stock, order, audit"]
+  end
+
+  subgraph data["app.models + database"]
+    M["entities — SQLAlchemy"]
+    DB[("БД")]
+  end
+
+  routes --> core
+  routes --> svc
+  svc --> M
+  M --> DB
+```
+
+### 2.3. Развёртывание (типовой вариант «разработка / demo»)
+
+```mermaid
+flowchart LR
+  B[Браузер :5173<br/>Vite dev] -->|прокси /api| P[uvicorn :8000<br/>FastAPI]
+  P --> F[(warehouse.db<br/>или Postgres)]
+```
+
+Для **production** статику `frontend/dist` отдают через nginx/CDN, а API — отдельным процессом; БД — управляемый **PostgreSQL** (см. `docker-compose.postgres.yml`).
+
+---
+
+## 3. Диаграмма вариантов использования
 
 Акторы: **Гость** (до входа), **Рабочий**, **Администратор**. Варианты сгруппированы по областям; помечено `<<extend>>`-логикой там, где сценарий доступен только при наличии токена и роли.
 
@@ -105,7 +188,7 @@ flowchart TB
 
 ---
 
-## 3. ER-диаграмма платформы
+## 4. ER-диаграмма платформы
 
 Отражены таблицы ORM-модели, ключи и основные связи. Перечислены правила `ON DELETE`, заданные во ForeignKey.
 
@@ -194,9 +277,9 @@ erDiagram
 
 ---
 
-## 4. Диаграммы последовательности
+## 5. Диаграммы последовательности
 
-### 4.1. Вход пользователя (аутентификация)
+### 5.1. Вход пользователя (аутентификация)
 
 ```mermaid
 sequenceDiagram
@@ -228,13 +311,13 @@ sequenceDiagram
 
 ---
 
-## 5. Соглашения по просмотру диаграмм
+## 6. Соглашения по просмотру диаграмм
 
 - Локально: расширение «Markdown Preview Mermaid Support» или экспорт PNG с [mermaid.live](https://mermaid.live).
-- В репозтории: при просмотре `PLATFORM_UML.md` на GitHub диаграммы отображаются автоматически.
+- В репозитории: при просмотре `PLATFORM_UML.md` на GitHub диаграммы отображаются автоматически.
 
 ---
 
-## 6. Версия документа
+## 7. Версия документа
 
 Соответствует коду приложения: FastAPI-приложение `app.main`, модели `app.models.entities`, маршруты `app.api.routes.*`. При изменении API или схемы БД этот файл стоит обновлять.

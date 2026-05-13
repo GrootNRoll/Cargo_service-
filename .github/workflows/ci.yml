@@ -107,5 +107,5 @@ jobs:
 
       - name: Deploy (stub)
         run: |
-          echo "Заглушка: подключите сюда реальный деплой (registry, SSH, PaaS, kubectl и т.д.)."
+          echo "Заглушка: надо подключить сюда реальный деплой"
           ls -la dist
